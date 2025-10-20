@@ -70,6 +70,13 @@ export class F1CostView {
                 const percentage = parseFloat(event.target.value) || 0;
                 this.eventAggregator.publish(EVENTS.F1_DISCOUNT_CHANGED, { percentage });
             });
+
+            // [NEW] Add blur on Enter key press
+            discountInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    event.target.blur();
+                }
+            });
         }
     }
 
@@ -109,7 +116,8 @@ export class F1CostView {
 
         const totalDualPairs = Math.floor(items.filter(item => item.dual === 'D').length / 2);
         const comboQty = (ui.f1.dual_combo_qty === null) ? totalDualPairs : ui.f1.dual_combo_qty;
-        const slimQty = (ui.f1.dual_slim_qty === null) ? 0 : ui.f1.dual_slim_qty;
+        const slimQty = (ui.f1.dual_slim_qty === null) ?
+            0 : ui.f1.dual_slim_qty;
         componentPrices['dual-combo'] = this.calculationService.calculateF1ComponentPrice('dual-combo', comboQty);
         componentPrices.slim = this.calculationService.calculateF1ComponentPrice('slim', slimQty);
         this.f1.displays.qty['dual-combo'].textContent = comboQty;
@@ -146,5 +154,14 @@ export class F1CostView {
 
     activate() {
         this.eventAggregator.publish(EVENTS.F1_TAB_ACTIVATED);
+
+        // [NEW] Focus on the discount input when the tab is activated.
+        setTimeout(() => {
+            const discountInput = this.f1.inputs.discount;
+            if (discountInput) {
+                discountInput.focus();
+                discountInput.select();
+            }
+        }, 50); // A small delay ensures the element is visible and focusable.
     }
 }

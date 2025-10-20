@@ -22,7 +22,6 @@ export class WorkflowService {
             'f2-b10-wifi-qty', 'f2-b13-delivery-qty', 'f2-b14-install-qty',
             'f2-b15-removal-qty', 'f2-b17-mul-times', 'f2-b18-discount'
         ];
-        
         console.log("WorkflowService Initialized.");
     }
 
@@ -69,7 +68,7 @@ export class WorkflowService {
                             return true;
                         }
                     },
-                    { type: 'button', text: 'Cancel', className: 'secondary', colspan: 2, callback: () => {} }
+                    { type: 'button', text: 'Cancel', className: 'secondary', colspan: 2, callback: () => { } }
                 ]
             ],
             onOpen: () => {
@@ -103,10 +102,10 @@ export class WorkflowService {
         const { quoteData, ui } = this.stateService.getState();
         const items = quoteData.products[quoteData.currentProduct].items;
         const totalDualPairs = Math.floor(items.filter(item => item.dual === 'D').length / 2);
-    
+
         const initialCombo = (ui.f1.dual_combo_qty === null) ? totalDualPairs : ui.f1.dual_combo_qty;
         const initialSlim = (ui.f1.dual_slim_qty === null) ? 0 : ui.f1.dual_slim_qty;
-    
+
         this.eventAggregator.publish(EVENTS.SHOW_CONFIRMATION_DIALOG, {
             message: `Total Dual pairs: ${totalDualPairs}. Please distribute them.`,
             layout: [
@@ -125,12 +124,12 @@ export class WorkflowService {
                         callback: () => {
                             const qtyCombo = parseInt(document.getElementById(DOM_IDS.DIALOG_INPUT_COMBO).value, 10);
                             const qtySlim = parseInt(document.getElementById(DOM_IDS.DIALOG_INPUT_SLIM).value, 10);
-    
+
                             if (isNaN(qtyCombo) || isNaN(qtySlim) || qtyCombo < 0 || qtySlim < 0) {
                                 this.eventAggregator.publish(EVENTS.SHOW_NOTIFICATION, { message: 'Quantities must be positive numbers.', type: 'error' });
                                 return false;
                             }
-    
+
                             if (qtyCombo + qtySlim !== totalDualPairs) {
                                 this.eventAggregator.publish(EVENTS.SHOW_NOTIFICATION, {
                                     message: `Total must equal ${totalDualPairs}. Current total: ${qtyCombo + qtySlim}.`,
@@ -138,32 +137,32 @@ export class WorkflowService {
                                 });
                                 return false;
                             }
-    
+
                             this.stateService.dispatch(uiActions.setF1DualDistribution(qtyCombo, qtySlim));
                             return true;
                         }
                     },
-                    { type: 'button', text: 'Cancel', className: 'secondary', colspan: 2, callback: () => {} }
+                    { type: 'button', text: 'Cancel', className: 'secondary', colspan: 2, callback: () => { } }
                 ]
             ],
             onOpen: () => {
                 const inputCombo = document.getElementById(DOM_IDS.DIALOG_INPUT_COMBO);
                 const inputSlim = document.getElementById(DOM_IDS.DIALOG_INPUT_SLIM);
-    
+
                 inputSlim.addEventListener('input', () => {
                     const qtySlim = parseInt(inputSlim.value, 10);
                     if (!isNaN(qtySlim) && qtySlim >= 0 && qtySlim <= totalDualPairs) {
                         inputCombo.value = totalDualPairs - qtySlim;
                     }
                 });
-    
+
                 inputCombo.addEventListener('input', () => {
                     const qtyCombo = parseInt(inputCombo.value, 10);
                     if (!isNaN(qtyCombo) && qtyCombo >= 0 && qtyCombo <= totalDualPairs) {
                         inputSlim.value = totalDualPairs - qtyCombo;
                     }
                 });
-    
+
                 setTimeout(() => {
                     inputSlim.focus();
                     inputSlim.select();
@@ -177,7 +176,7 @@ export class WorkflowService {
         const { quoteData } = this.stateService.getState();
         const productStrategy = this.productFactory.getProductStrategy(quoteData.currentProduct);
         const { updatedQuoteData } = this.calculationService.calculateAndSum(quoteData, productStrategy);
-        
+
         this.stateService.dispatch(quoteActions.setQuoteData(updatedQuoteData));
     }
 
@@ -185,14 +184,14 @@ export class WorkflowService {
         const { quoteData } = this.stateService.getState();
         const productStrategy = this.productFactory.getProductStrategy(quoteData.currentProduct);
         const { updatedQuoteData } = this.calculationService.calculateAndSum(quoteData, productStrategy);
-        
+
         this.stateService.dispatch(quoteActions.setQuoteData(updatedQuoteData));
-        
+
         this.detailConfigView.driveAccessoriesView.recalculateAllDriveAccessoryPrices();
         this.detailConfigView.dualChainView._calculateAndStoreDualPrice();
-        
+
         this._calculateF2Summary();
-        
+
         this.eventAggregator.publish(EVENTS.FOCUS_ELEMENT, { elementId: 'f2-b10-wifi-qty' });
     }
 
@@ -200,7 +199,7 @@ export class WorkflowService {
         const { ui } = this.stateService.getState();
         if (ui.currentView === 'QUICK_QUOTE') {
             this.stateService.dispatch(uiActions.setCurrentView('DETAIL_CONFIG'));
-            this.detailConfigView.activateTab('k1-tab'); 
+            this.detailConfigView.activateTab('k1-tab');
         } else {
             this.stateService.dispatch(uiActions.setCurrentView('QUICK_QUOTE'));
             this.stateService.dispatch(uiActions.setVisibleColumns(initialState.ui.visibleColumns));
@@ -275,10 +274,13 @@ export class WorkflowService {
 
     focusNextF2Input(currentId) {
         const currentIndex = this.f2InputSequence.indexOf(currentId);
-        if (currentIndex > -1) {
-            const nextIndex = (currentIndex + 1) % this.f2InputSequence.length;
-            const nextElementId = this.f2InputSequence[nextIndex];
+        if (currentIndex > -1 && currentIndex < this.f2InputSequence.length - 1) {
+            const nextElementId = this.f2InputSequence[currentIndex + 1];
             this.eventAggregator.publish(EVENTS.FOCUS_ELEMENT, { elementId: nextElementId });
+        } else {
+            // If it's the last element, blur it.
+            const currentElement = document.getElementById(currentId);
+            currentElement?.blur();
         }
     }
 

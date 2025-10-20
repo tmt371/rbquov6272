@@ -11,6 +11,7 @@ export class PanelComponent {
      * @param {EventAggregator} config.eventAggregator - The application's event bus.
      * @param {string} config.expandedClass - The CSS class to apply when the panel is expanded (e.g., 'is-expanded').
      * @param {string} [config.retractEventName] - Optional: The event to listen for to retract the panel.
+     * @param {Function} [config.onToggle] - Optional: A callback function to execute when the panel is toggled.
      */
     constructor(config) {
         this.config = config;
@@ -19,7 +20,7 @@ export class PanelComponent {
         if (!this.config.panelElement || !this.config.toggleElement || !this.config.eventAggregator || !this.config.expandedClass) {
             throw new Error("PanelComponent config requires: panelElement, toggleElement, eventAggregator, and expandedClass.");
         }
-        
+
         this.initialize();
         console.log("Configurable PanelComponent Initialized for:", this.config.panelElement.id);
     }
@@ -36,7 +37,12 @@ export class PanelComponent {
      * Toggles the panel's visibility based on the configured CSS class.
      */
     toggle() {
-        this.config.panelElement.classList.toggle(this.config.expandedClass);
+        const isExpanded = this.config.panelElement.classList.toggle(this.config.expandedClass);
+
+        // [NEW] Execute the onToggle callback if it exists.
+        if (typeof this.config.onToggle === 'function') {
+            this.config.onToggle(isExpanded);
+        }
     }
 
     /**

@@ -35,7 +35,13 @@ export class UIManager {
             toggleElement: document.getElementById(DOM_IDS.FUNCTION_PANEL_TOGGLE),
             eventAggregator: this.eventAggregator,
             expandedClass: 'is-expanded',
-            retractEventName: EVENTS.OPERATION_SUCCESSFUL_AUTO_HIDE_PANEL
+            retractEventName: EVENTS.OPERATION_SUCCESSFUL_AUTO_HIDE_PANEL,
+            // [NEW] Add onToggle callback to default to F1 tab when opened.
+            onToggle: (isExpanded) => {
+                if (isExpanded) {
+                    this.rightPanelComponent.setActiveTab('f1-tab');
+                }
+            }
         });
 
         // [REMOVED] Self-instantiation of RightPanelComponent is removed.

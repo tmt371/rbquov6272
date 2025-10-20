@@ -38,7 +38,7 @@ export class RightPanelComponent {
             this.tabContainer.addEventListener('click', (event) => {
                 const target = event.target.closest('.tab-button');
                 if (target && !target.disabled) {
-                    this._setActiveTab(target.id);
+                    this.setActiveTab(target.id);
                 }
             });
         }
@@ -53,7 +53,8 @@ export class RightPanelComponent {
         }
     }
 
-    _setActiveTab(tabId) {
+    // [MODIFIED] Method is now public to allow external control (e.g., from UIManager).
+    setActiveTab(tabId) {
         const targetContentId = document.getElementById(tabId)?.dataset.tabTarget;
         if (!targetContentId) return;
 
