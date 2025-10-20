@@ -5,9 +5,11 @@
  */
 
 export class DetailConfigView {
-    constructor({
-        stateService,
-        eventAggregator,
+    constructor({ 
+        stateService, 
+        calculationService, 
+        eventAggregator, 
+        publishStateChangeCallback,
         // Sub-views are injected here
         k1LocationView,
         k2FabricView,
@@ -16,7 +18,9 @@ export class DetailConfigView {
         dualChainView
     }) {
         this.stateService = stateService;
+        this.calculationService = calculationService;
         this.eventAggregator = eventAggregator;
+        this.publish = publishStateChangeCallback;
 
         // Store instances of sub-views
         this.k1View = k1LocationView;
@@ -37,21 +41,23 @@ export class DetailConfigView {
                 break;
             case 'k2-tab':
                 this.k2View.activate();
+                this.k2View._updatePanelInputsState();
                 break;
             case 'k3-tab':
                 this.k3View.activate();
                 break;
-            case 'k4-tab':
+            case 'k4-tab': 
                 this.driveAccessoriesView.activate();
                 break;
-            case 'k5-tab':
+            case 'k5-tab': 
                 this.dualChainView.activate();
                 break;
             default:
                 break;
         }
+        this.publish();
     }
-
+    
     // --- Event Handlers that delegate to sub-views ---
 
     handleFocusModeRequest({ column }) {
@@ -64,7 +70,7 @@ export class DetailConfigView {
             return;
         }
     }
-
+    
     handleLocationInputEnter({ value }) {
         this.k1View.handleLocationInputEnter({ value });
     }
@@ -92,7 +98,7 @@ export class DetailConfigView {
     handleLFDeleteRequest() {
         this.k2View.handleLFDeleteRequest();
     }
-
+    
     handleToggleK3EditMode() {
         this.k3View.handleToggleK3EditMode();
     }
@@ -109,6 +115,8 @@ export class DetailConfigView {
         this.dualChainView.handleChainEnterPressed({ value });
     }
 
+
+
     handleDriveModeChange({ mode }) {
         this.driveAccessoriesView.handleModeChange({ mode });
     }
@@ -120,7 +128,7 @@ export class DetailConfigView {
     handleTableCellClick({ rowIndex, column }) {
         const { ui } = this.stateService.getState();
         const { activeEditMode, dualChainMode, driveAccessoryMode } = ui;
-
+        
         if (driveAccessoryMode) {
             this.driveAccessoriesView.handleTableCellClick({ rowIndex, column });
             return;
@@ -130,7 +138,7 @@ export class DetailConfigView {
             this.k1View.handleTableCellClick({ rowIndex });
             return;
         }
-
+        
         if (activeEditMode === 'K3') {
             this.k3View.handleTableCellClick({ rowIndex, column });
             return;
@@ -140,5 +148,9 @@ export class DetailConfigView {
             this.dualChainView.handleTableCellClick({ rowIndex, column });
             return;
         }
+    }
+    
+    initializePanelState() {
+        this.k2View._updatePanelInputsState();
     }
 }
