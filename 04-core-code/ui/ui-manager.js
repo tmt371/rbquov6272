@@ -61,6 +61,20 @@ export class UIManager {
 
     initialize() {
         this.eventAggregator.subscribe(EVENTS.USER_TOGGLED_NUMERIC_KEYBOARD, () => this._toggleNumericKeyboard());
+
+        // [NEW] Add a global listener for focus events.
+        this.eventAggregator.subscribe(EVENTS.FOCUS_ELEMENT, ({ elementId }) => {
+            const element = document.getElementById(elementId);
+            if (element) {
+                setTimeout(() => {
+                    element.focus();
+                    if (typeof element.select === 'function') {
+                        element.select();
+                    }
+                }, 50); // A small delay to ensure the element is rendered and focusable.
+            }
+        });
+
         this._initializeResizeObserver();
     }
 

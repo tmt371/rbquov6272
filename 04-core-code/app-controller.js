@@ -1,6 +1,7 @@
 // File: 04-core-code/app-controller.js
 
 import { EVENTS, STORAGE_KEYS } from './config/constants.js';
+import * as uiActions from './actions/ui-actions.js';
 
 const AUTOSAVE_INTERVAL_MS = 60000;
 
@@ -23,7 +24,7 @@ export class AppController {
         this._subscribeGlobalEvents();
         this._subscribeF1Events();
         this._subscribeF2Events();
-        
+
         // This is the core of the reactive state update.
         // Any service that updates the state via StateService will trigger this,
         // which in turn re-renders the UI.
@@ -33,7 +34,7 @@ export class AppController {
 
         this._startAutoSave();
     }
-    
+
     _subscribeQuickQuoteEvents() {
         const delegate = (handlerName, ...args) => this.quickQuoteView[handlerName](...args);
 
@@ -61,7 +62,7 @@ export class AppController {
                 this.detailConfigView[handlerName](data);
             }
         };
-        
+
         this.eventAggregator.subscribe(EVENTS.TABLE_CELL_CLICKED, (data) => {
             const { ui } = this.stateService.getState();
             if (ui.currentView === 'QUICK_QUOTE') {
@@ -70,7 +71,7 @@ export class AppController {
                 this.detailConfigView.handleTableCellClick(data);
             }
         });
-         this.eventAggregator.subscribe(EVENTS.SEQUENCE_CELL_CLICKED, (data) => {
+        this.eventAggregator.subscribe(EVENTS.SEQUENCE_CELL_CLICKED, (data) => {
             const { ui } = this.stateService.getState();
             if (ui.currentView === 'QUICK_QUOTE') {
                 this.quickQuoteView.handleSequenceCellClick(data);
@@ -88,7 +89,7 @@ export class AppController {
         this.eventAggregator.subscribe(EVENTS.USER_REQUESTED_LF_DELETE_MODE, () => delegate('handleLFDeleteRequest'));
         this.eventAggregator.subscribe(EVENTS.USER_TOGGLED_K3_EDIT_MODE, () => delegate('handleToggleK3EditMode'));
         this.eventAggregator.subscribe(EVENTS.USER_REQUESTED_BATCH_CYCLE, (data) => delegate('handleBatchCycle', data));
-        
+
         this.eventAggregator.subscribe(EVENTS.DUAL_CHAIN_MODE_CHANGED, (data) => delegate('handleDualChainModeChange', data));
         this.eventAggregator.subscribe(EVENTS.CHAIN_ENTER_PRESSED, (data) => delegate('handleChainEnterPressed', data));
         this.eventAggregator.subscribe(EVENTS.DRIVE_MODE_CHANGED, (data) => delegate('handleDriveModeChange', data));
@@ -117,14 +118,28 @@ export class AppController {
         this.eventAggregator.subscribe(EVENTS.F2_INPUT_ENTER_PRESSED, (data) => this.workflowService.focusNextF2Input(data.id));
         this.eventAggregator.subscribe(EVENTS.TOGGLE_FEE_EXCLUSION, (data) => this.workflowService.handleToggleFeeExclusion(data));
     }
-    
+
     // This is a special method used by AppContext to publish state, it needs access to stateService.
     _getFullState() {
         return this.stateService.getState();
     }
-    
+
     publishInitialState() {
-        this.eventAggregator.publish(EVENTS.STATE_CHANGED, this._getFullState());
+        const initialState = this._getFullState();
+        this.eventAggregator.publish(EVENTS.STATE_CHANGED, initialState);
+
+        // [NEW] Sync inputValue with the active cell's data after initial load/restore.
+        const { ui, quoteData } = initialState;
+        const { activeCell } = ui;
+        const currentProductKey = quoteData.currentProduct;
+        const items = quoteData.products[currentProductKey].items;
+
+        if (activeCell && items[activeCell.rowIndex]) {
+            const item = items[activeCell.rowIndex];
+            const value = item[activeCell.column] || '';
+            // Dispatch an action to update the inputValue in the UI state
+            this.stateService.dispatch(uiActions.setInputValue(value));
+        }
     }
 
     _startAutoSave() {
