@@ -41,7 +41,7 @@ export class AppContext {
     }
 
     initialize(startingQuoteData = null) {
-        // 在這裡，我們將從 main.js 遷移過來的實例化邏輯
+        // [MODIFIED] This method now only initializes non-UI services and controllers.
         const eventAggregator = new EventAggregator();
         this.register('eventAggregator', eventAggregator);
 
@@ -78,26 +78,48 @@ export class AppContext {
             stateService
         });
         this.register('focusService', focusService);
+    }
 
-        const publishStateChangeCallback = () => eventAggregator.publish('stateChanged', this.get('appController')._getFullState());
+    initializeUIComponents() {
+        // [NEW] This method initializes all UI-dependent components.
+        // It must be called AFTER the HTML partials are loaded.
+        const eventAggregator = this.get('eventAggregator');
+        const calculationService = this.get('calculationService');
+        const stateService = this.get('stateService');
+        const configManager = this.get('configManager');
+        const productFactory = this.get('productFactory');
+        const focusService = this.get('focusService');
+        const fileService = this.get('fileService');
 
-        const k1LocationView = new K1LocationView({ stateService, publishStateChangeCallback });
-        const k2FabricView = new K2FabricView({ stateService, eventAggregator, publishStateChangeCallback });
-        const k3OptionsView = new K3OptionsView({ stateService, publishStateChangeCallback });
-        const dualChainView = new DualChainView({ stateService, calculationService, eventAggregator, publishStateChangeCallback });
-        const driveAccessoriesView = new DriveAccessoriesView({ stateService, calculationService, eventAggregator, publishStateChangeCallback });
+        // --- Instantiate Right Panel Sub-Views ---
+        const rightPanelElement = document.getElementById('function-panel');
+        const f1View = new F1CostView({ panelElement: rightPanelElement, eventAggregator, calculationService });
+        const f2View = new F2SummaryView({ panelElement: rightPanelElement, eventAggregator });
+        const f3View = new F3QuotePrepView({ panelElement: rightPanelElement });
+        const f4View = new F4ActionsView({ panelElement: rightPanelElement, eventAggregator });
 
-        this.register('k1LocationView', k1LocationView);
-        this.register('k2FabricView', k2FabricView);
-        this.register('k3OptionsView', k3OptionsView);
-        this.register('dualChainView', dualChainView);
-        this.register('driveAccessoriesView', driveAccessoriesView);
+        // --- Instantiate Main RightPanelComponent Manager ---
+        const rightPanelComponent = new RightPanelComponent({
+            panelElement: rightPanelElement,
+            eventAggregator,
+            f1View,
+            f2View,
+            f3View,
+            f4View
+        });
+        this.register('rightPanelComponent', rightPanelComponent);
 
+        // --- Instantiate Main Left Panel Views ---
+        const k1LocationView = new K1LocationView({ stateService });
+        const k2FabricView = new K2FabricView({ stateService, eventAggregator });
+        const k3OptionsView = new K3OptionsView({ stateService });
+        const dualChainView = new DualChainView({ stateService, calculationService, eventAggregator });
+        const driveAccessoriesView = new DriveAccessoriesView({ stateService, calculationService, eventAggregator });
+
+        // --- [MODIFIED] Removed obsolete publishStateChangeCallback from DetailConfigView dependencies ---
         const detailConfigView = new DetailConfigView({
             stateService,
-            calculationService,
             eventAggregator,
-            publishStateChangeCallback,
             k1LocationView,
             k2FabricView,
             k3OptionsView,
@@ -105,7 +127,7 @@ export class AppContext {
             driveAccessoriesView
         });
         this.register('detailConfigView', detailConfigView);
-        
+
         const workflowService = new WorkflowService({
             eventAggregator,
             stateService,
@@ -123,8 +145,7 @@ export class AppContext {
             fileService,
             eventAggregator,
             productFactory,
-            configManager,
-            publishStateChangeCallback
+            configManager
         });
         this.register('quickQuoteView', quickQuoteView);
 
@@ -149,6 +170,7 @@ import { CalculationService } from './services/calculation-service.js';
 import { FocusService } from './services/focus-service.js';
 import { FileService } from './services/file-service.js';
 import { WorkflowService } from './services/workflow-service.js';
+import { RightPanelComponent } from './ui/right-panel-component.js';
 import { QuickQuoteView } from './ui/views/quick-quote-view.js';
 import { DetailConfigView } from './ui/views/detail-config-view.js';
 import { K1LocationView } from './ui/views/k1-location-view.js';
@@ -157,3 +179,7 @@ import { K3OptionsView } from './ui/views/k3-options-view.js';
 import { DualChainView } from './ui/views/dual-chain-view.js';
 import { DriveAccessoriesView } from './ui/views/drive-accessories-view.js';
 import { initialState } from './config/initial-state.js';
+import { F1CostView } from './ui/views/f1-cost-view.js';
+import { F2SummaryView } from './ui/views/f2-summary-view.js';
+import { F3QuotePrepView } from './ui/views/f3-quote-prep-view.js';
+import { F4ActionsView } from './ui/views/f4-actions-view.js';
