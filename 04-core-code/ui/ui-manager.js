@@ -6,20 +6,20 @@ import { PanelComponent } from './panel-component.js';
 import { NotificationComponent } from './notification-component.js';
 import { DialogComponent } from './dialog-component.js';
 import { LeftPanelComponent } from './left-panel-component.js';
-import { RightPanelComponent } from './right-panel-component.js';
 import { EVENTS, DOM_IDS } from '../config/constants.js';
 
 export class UIManager {
-    constructor(appElement, eventAggregator, calculationService) {
+    constructor({ appElement, eventAggregator, calculationService, rightPanelComponent }) {
         this.appElement = appElement;
         this.eventAggregator = eventAggregator;
         this.calculationService = calculationService;
+        this.rightPanelComponent = rightPanelComponent; // [MODIFIED] Receive instance
 
         this.numericKeyboardPanel = document.getElementById(DOM_IDS.NUMERIC_KEYBOARD_PANEL);
-        
-        this.insertButton = document.getElementById('key-ins-grid'); // Corrected ID from 'key-ins'
+
+        this.insertButton = document.getElementById('key-ins-grid');
         this.clearButton = document.getElementById('key-clear');
-        
+
         this.leftPanelElement = document.getElementById(DOM_IDS.LEFT_PANEL);
 
         const tableElement = document.getElementById(DOM_IDS.RESULTS_TABLE);
@@ -37,12 +37,8 @@ export class UIManager {
             expandedClass: 'is-expanded',
             retractEventName: EVENTS.OPERATION_SUCCESSFUL_AUTO_HIDE_PANEL
         });
-        
-        this.rightPanelComponent = new RightPanelComponent(
-            document.getElementById(DOM_IDS.FUNCTION_PANEL),
-            this.eventAggregator,
-            this.calculationService
-        );
+
+        // [REMOVED] Self-instantiation of RightPanelComponent is removed.
 
         this.notificationComponent = new NotificationComponent({
             containerElement: document.getElementById(DOM_IDS.TOAST_CONTAINER),
@@ -71,7 +67,7 @@ export class UIManager {
         resizeObserver.observe(this.appElement);
     }
 
-_updateExpandedPanelPosition() {
+    _updateExpandedPanelPosition() {
         if (!this.leftPanelElement || !this.numericKeyboardPanel) return;
 
         const key7 = this.numericKeyboardPanel.querySelector('#key-7');
@@ -109,7 +105,7 @@ _updateExpandedPanelPosition() {
         this.summaryComponent.render(currentProductData.summary, state.ui.isSumOutdated);
         this.leftPanelComponent.render(state.ui, state.quoteData);
         this.rightPanelComponent.render(state);
-        
+
         this._updateButtonStates(state);
         this._updateLeftPanelState(state.ui.currentView);
         this._scrollToActiveCell(state);
@@ -148,7 +144,7 @@ _updateExpandedPanelPosition() {
             }
         }
         if (this.insertButton) this.insertButton.disabled = insertDisabled;
-        
+
         // --- Clear Button Logic ---
         let clearDisabled = !isSingleSelection; // Disable if not a single selection
         if (isSingleSelection) {
@@ -161,7 +157,7 @@ _updateExpandedPanelPosition() {
         }
         if (this.clearButton) this.clearButton.disabled = clearDisabled;
     }
-    
+
     _scrollToActiveCell(state) {
         if (!state.ui.activeCell) return;
         const { rowIndex, column } = state.ui.activeCell;
@@ -170,7 +166,7 @@ _updateExpandedPanelPosition() {
             activeCellElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
     }
-    
+
     _toggleNumericKeyboard() {
         if (this.numericKeyboardPanel) {
             this.numericKeyboardPanel.classList.toggle('is-collapsed');

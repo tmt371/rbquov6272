@@ -11,9 +11,9 @@ class App {
     constructor() {
         this.appContext = new AppContext();
         const migrationService = new MigrationService();
-        
+
         const restoredData = migrationService.loadAndMigrateData();
-        
+
         // 將恢復的資料傳遞給 AppContext 進行初始化
         this.appContext.initialize(restoredData);
     }
@@ -34,12 +34,12 @@ class App {
                 }
             } catch (error) {
                 console.error(`Failed to load HTML partial from ${url}:`, error);
-                eventAggregator.publish(EVENTS.SHOW_NOTIFICATION, { message: `Error: Could not load UI component from ${url}!`, type: 'error'});
+                eventAggregator.publish(EVENTS.SHOW_NOTIFICATION, { message: `Error: Could not load UI component from ${url}!`, type: 'error' });
             }
         };
-    
+
         await loadPartial(paths.partials.leftPanel, document.body);
-        
+
         const functionPanel = document.getElementById(DOM_IDS.FUNCTION_PANEL);
         if (functionPanel) {
             await loadPartial(paths.partials.rightPanel, functionPanel, 'innerHTML');
@@ -48,19 +48,21 @@ class App {
 
     async run() {
         console.log("Application starting...");
-        
+
         await this._loadPartials();
 
         const eventAggregator = this.appContext.get('eventAggregator');
         const calculationService = this.appContext.get('calculationService');
         const configManager = this.appContext.get('configManager');
         const appController = this.appContext.get('appController');
+        const rightPanelComponent = this.appContext.get('rightPanelComponent'); // [MODIFIED] Get instance from context
 
-        this.uiManager = new UIManager(
-            document.getElementById(DOM_IDS.APP),
+        this.uiManager = new UIManager({
+            appElement: document.getElementById(DOM_IDS.APP),
             eventAggregator,
-            calculationService
-        );
+            calculationService,
+            rightPanelComponent // [MODIFIED] Pass instance to UIManager
+        });
 
         await configManager.initialize();
 
@@ -69,7 +71,7 @@ class App {
         });
 
         appController.publishInitialState();
-        
+
         this.inputHandler = new InputHandler(eventAggregator);
         this.inputHandler.initialize();
 
@@ -83,7 +85,7 @@ class App {
 
         // Publish the appReady event after all initializations are complete.
         eventAggregator.publish(EVENTS.APP_READY);
-        
+
         console.log("Application running and interactive.");
 
         document.body.classList.add('app-is-ready');
