@@ -8,11 +8,10 @@ import * as quoteActions from '../../actions/quote-actions.js';
  * @fileoverview A dedicated sub-view for handling all logic related to the Dual/Chain tab.
  */
 export class DualChainView {
-    constructor({ stateService, calculationService, eventAggregator, publishStateChangeCallback }) {
+    constructor({ stateService, calculationService, eventAggregator }) {
         this.stateService = stateService;
         this.calculationService = calculationService;
         this.eventAggregator = eventAggregator;
-        this.publish = publishStateChangeCallback;
         console.log("DualChainView Initialized.");
     }
 
@@ -42,16 +41,16 @@ export class DualChainView {
         if (currentMode === 'dual') {
             const isValid = this._validateDualSelection();
             if (!isValid) {
-                return; 
+                return;
             }
         }
-        
+
         this.stateService.dispatch(uiActions.setDualChainMode(newMode));
 
         if (newMode === 'dual') {
             this._calculateAndStoreDualPrice();
         }
-        
+
         if (!newMode) {
             this.stateService.dispatch(uiActions.setTargetCell(null));
             this.stateService.dispatch(uiActions.clearDualChainInputValue());
@@ -65,12 +64,12 @@ export class DualChainView {
     _calculateAndStoreDualPrice() {
         const items = this._getItems();
         const productType = this._getCurrentProductType();
-        
+
         const price = this.calculationService.calculateAccessorySalePrice(productType, 'dual', { items });
-        
+
         this.stateService.dispatch(quoteActions.updateAccessorySummary({ dualCostSum: price }));
         this.stateService.dispatch(uiActions.setDualPrice(price));
-        
+
         this._updateSummaryAccessoriesTotal();
     }
 
@@ -94,20 +93,20 @@ export class DualChainView {
                 message: 'The total count of Dual Brackets (D) must be an even number. Please correct the selection.',
                 type: 'error'
             });
-            return false; 
+            return false;
         }
 
         for (let i = 0; i < dualCount; i += 2) {
-            if (selectedIndexes[i+1] !== selectedIndexes[i] + 1) {
+            if (selectedIndexes[i + 1] !== selectedIndexes[i] + 1) {
                 this.eventAggregator.publish(EVENTS.SHOW_NOTIFICATION, {
                     message: 'Dual Brackets (D) must be set on adjacent items. Please check your selection.',
                     type: 'error'
                 });
-                return false; 
+                return false;
             }
         }
-        
-        return true; 
+
+        return true;
     }
 
     /**
@@ -129,7 +128,7 @@ export class DualChainView {
 
         const valueToSave = value === '' ? null : valueAsNumber;
         this.stateService.dispatch(quoteActions.updateItemProperty(currentTarget.rowIndex, currentTarget.column, valueToSave));
-        
+
         this.stateService.dispatch(uiActions.setTargetCell(null));
         this.stateService.dispatch(uiActions.clearDualChainInputValue());
     }
@@ -156,25 +155,24 @@ export class DualChainView {
 
         if (dualChainMode === 'chain' && column === 'chain') {
             this.stateService.dispatch(uiActions.setTargetCell({ rowIndex, column: 'chain' }));
-            
+
             setTimeout(() => {
                 const inputBox = document.getElementById('k4-input-display');
                 inputBox?.focus();
                 inputBox?.select();
-            }, 50); 
+            }, 50);
         }
     }
-    
+
     /**
      * [REVISED] This method is called by the main DetailConfigView when the K5 tab becomes active.
      * It now correctly synchronizes all accessory prices from the K4 state.
      */
     activate() {
         this.stateService.dispatch(uiActions.setVisibleColumns(['sequence', 'fabricTypeDisplay', 'location', 'dual', 'chain']));
-        
+
         const { ui, quoteData } = this._getState();
         const currentProductData = quoteData.products[quoteData.currentProduct];
-
         this.stateService.dispatch(uiActions.setSummaryWinderPrice(ui.driveWinderTotalPrice));
         this.stateService.dispatch(uiActions.setSummaryMotorPrice(ui.driveMotorTotalPrice));
         this.stateService.dispatch(uiActions.setSummaryRemotePrice(ui.driveRemoteTotalPrice));
@@ -190,7 +188,7 @@ export class DualChainView {
      */
     _updateSummaryAccessoriesTotal() {
         const { ui } = this._getState();
-        
+
         const dualPrice = ui.dualPrice || 0;
         const winderPrice = ui.summaryWinderPrice || 0;
         const motorPrice = ui.summaryMotorPrice || 0;
@@ -199,7 +197,7 @@ export class DualChainView {
         const cordPrice = ui.summaryCordPrice || 0;
 
         const total = dualPrice + winderPrice + motorPrice + remotePrice + chargerPrice + cordPrice;
-        
+
         this.stateService.dispatch(uiActions.setSummaryAccessoriesTotal(total));
     }
 }

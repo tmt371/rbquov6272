@@ -8,11 +8,10 @@ import * as quoteActions from '../../actions/quote-actions.js';
  * @fileoverview A dedicated sub-view for handling all logic related to the Drive/Accessories tab.
  */
 export class DriveAccessoriesView {
-    constructor({ stateService, calculationService, eventAggregator, publishStateChangeCallback }) {
+    constructor({ stateService, calculationService, eventAggregator }) {
         this.stateService = stateService;
         this.calculationService = calculationService;
         this.eventAggregator = eventAggregator;
-        this.publish = publishStateChangeCallback;
         console.log("DriveAccessoriesView Initialized.");
     }
 
@@ -42,7 +41,7 @@ export class DriveAccessoriesView {
         if (currentMode) {
             this.recalculateAllDriveAccessoryPrices();
         }
-        
+
         this.stateService.dispatch(uiActions.setDriveAccessoryMode(newMode));
 
         if (newMode) {
@@ -79,7 +78,7 @@ export class DriveAccessoriesView {
                     layout: [
                         [
                             { type: 'button', text: 'Confirm', callback: () => this._toggleWinder(rowIndex, true) },
-                            { type: 'button', text: 'Cancel', className: 'secondary', callback: () => {} }
+                            { type: 'button', text: 'Cancel', className: 'secondary', callback: () => { } }
                         ]
                     ]
                 });
@@ -93,7 +92,7 @@ export class DriveAccessoriesView {
                     layout: [
                         [
                             { type: 'button', text: 'Confirm', callback: () => this._toggleMotor(rowIndex, true) },
-                            { type: 'button', text: 'Cancel', className: 'secondary', callback: () => {} }
+                            { type: 'button', text: 'Cancel', className: 'secondary', callback: () => { } }
                         ]
                     ]
                 });
@@ -102,7 +101,7 @@ export class DriveAccessoriesView {
             }
         }
     }
-    
+
     handleCounterChange({ accessory, direction }) {
         const { ui } = this._getState();
         const counts = {
@@ -122,17 +121,19 @@ export class DriveAccessoriesView {
                     message: `Motors are present in the quote. Are you sure you want to set the ${accessoryName} quantity to 0?`,
                     layout: [
                         [
-                            { type: 'button', text: 'Confirm', callback: () => {
-                                this.stateService.dispatch(uiActions.setDriveAccessoryCount(accessory, 0));
-                            }},
-                            { type: 'button', text: 'Cancel', className: 'secondary', callback: () => {} }
+                            {
+                                type: 'button', text: 'Confirm', callback: () => {
+                                    this.stateService.dispatch(uiActions.setDriveAccessoryCount(accessory, 0));
+                                }
+                            },
+                            { type: 'button', text: 'Cancel', className: 'secondary', callback: () => { } }
                         ]
                     ]
                 });
-                return; 
+                return;
             }
         }
-        
+
         this.stateService.dispatch(uiActions.setDriveAccessoryCount(accessory, newCount));
     }
 
@@ -147,7 +148,7 @@ export class DriveAccessoriesView {
         const newValue = item.motor ? '' : 'Motor';
         this.stateService.dispatch(quoteActions.updateWinderMotorProperty(rowIndex, 'motor', newValue));
     }
-    
+
     recalculateAllDriveAccessoryPrices() {
         const items = this._getItems();
         const state = this._getState().ui;
@@ -166,9 +167,9 @@ export class DriveAccessoriesView {
         this.stateService.dispatch(uiActions.setDriveAccessoryTotalPrice('motor', motorPrice));
         summaryData.motor = { count: motorCount, price: motorPrice };
         grandTotal += motorPrice;
-        
+
         const remoteCount = state.driveRemoteCount;
-        const remotePrice = this.calculationService.calculateAccessorySalePrice(productType, 'remote', { 
+        const remotePrice = this.calculationService.calculateAccessorySalePrice(productType, 'remote', {
             count: remoteCount
         });
         this.stateService.dispatch(uiActions.setDriveAccessoryTotalPrice('remote', remotePrice));
