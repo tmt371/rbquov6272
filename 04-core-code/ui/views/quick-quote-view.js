@@ -18,7 +18,6 @@ export class QuickQuoteView {
         this.configManager = configManager;
         this.publish = publishStateChangeCallback;
         this.currentProduct = 'rollerBlind';
-        this.eventAggregator = params.eventAggregator; // 確保這行存在
     }
 
     _getItems() {
@@ -36,7 +35,7 @@ export class QuickQuoteView {
             this.eventAggregator.publish(EVENTS.SHOW_NOTIFICATION, { message: "Cannot select the final empty row.", type: 'error' });
             return;
         }
-
+        
         this.stateService.dispatch(uiActions.toggleMultiSelectSelection(rowIndex));
         this.publish();
     }
@@ -57,11 +56,11 @@ export class QuickQuoteView {
 
         const selectedIndex = multiSelectSelectedIndexes[0];
         this.stateService.dispatch(quoteActions.deleteRow(selectedIndex));
-
+        
         this.stateService.dispatch(uiActions.clearMultiSelectSelection());
         this.stateService.dispatch(uiActions.setSumOutdated(true));
         this.focusService.focusAfterDelete();
-
+        
         this.publish();
         this.eventAggregator.publish(EVENTS.OPERATION_SUCCESSFUL_AUTO_HIDE_PANEL);
     }
@@ -85,8 +84,8 @@ export class QuickQuoteView {
         const isLastRow = selectedIndex === items.length - 1;
 
         if (isLastRow) {
-            this.eventAggregator.publish(EVENTS.SHOW_NOTIFICATION, { message: "Cannot insert after the last row.", type: 'error' });
-            return;
+             this.eventAggregator.publish(EVENTS.SHOW_NOTIFICATION, { message: "Cannot insert after the last row.", type: 'error' });
+             return;
         }
         const nextItem = items[selectedIndex + 1];
         const isNextRowEmpty = !nextItem.width && !nextItem.height && !nextItem.fabricType;
@@ -94,7 +93,7 @@ export class QuickQuoteView {
             this.eventAggregator.publish(EVENTS.SHOW_NOTIFICATION, { message: "Cannot insert before an empty row.", type: 'error' });
             return;
         }
-
+        
         this.stateService.dispatch(quoteActions.insertRow(selectedIndex));
         // The rowIndex of the new row is selectedIndex + 1
         this.stateService.dispatch(uiActions.setActiveCell(selectedIndex + 1, 'width'));
@@ -149,7 +148,7 @@ export class QuickQuoteView {
         const notificationType = result.success ? 'info' : 'error';
         this.eventAggregator.publish(EVENTS.SHOW_NOTIFICATION, { message: result.message, type: notificationType });
     }
-
+    
     handleReset() {
         if (window.confirm("This will clear all data. Are you sure?")) {
             this.stateService.dispatch(quoteActions.resetQuoteData());
@@ -157,15 +156,15 @@ export class QuickQuoteView {
             this.eventAggregator.publish(EVENTS.SHOW_NOTIFICATION, { message: 'Quote has been reset.' });
         }
     }
-
+    
     handleClearRow() {
         const { ui } = this.stateService.getState();
         const { multiSelectSelectedIndexes } = ui;
 
         if (multiSelectSelectedIndexes.length !== 1) {
-            this.eventAggregator.publish(EVENTS.SHOW_NOTIFICATION, {
-                message: 'Please select a single item to use this function.',
-                type: 'error'
+            this.eventAggregator.publish(EVENTS.SHOW_NOTIFICATION, { 
+                message: 'Please select a single item to use this function.', 
+                type: 'error' 
             });
             return;
         }
@@ -177,48 +176,48 @@ export class QuickQuoteView {
             message: `Row #${itemNumber}: What would you like to do?`,
             layout: [
                 [
-                    {
-                        type: 'button',
-                        text: 'Clear Fields (W,H,Type)',
+                    { 
+                        type: 'button', 
+                        text: 'Clear Fields (W,H,Type)', 
                         callback: () => {
                             this.stateService.dispatch(quoteActions.clearRow(selectedIndex));
                             this.stateService.dispatch(uiActions.clearMultiSelectSelection());
                             this.stateService.dispatch(uiActions.setSumOutdated(true));
                             this.focusService.focusAfterClear();
                             this.publish();
-                        }
+                        } 
                     },
-                    {
-                        type: 'button',
-                        text: 'Delete Row',
+                    { 
+                        type: 'button', 
+                        text: 'Delete Row', 
                         callback: () => {
                             this.stateService.dispatch(quoteActions.deleteRow(selectedIndex));
                             this.stateService.dispatch(uiActions.clearMultiSelectSelection());
                             this.stateService.dispatch(uiActions.setSumOutdated(true));
                             this.focusService.focusAfterDelete();
                             this.publish();
-                        }
+                        } 
                     },
-                    {
-                        type: 'button',
-                        text: 'Cancel',
-                        className: 'secondary',
-                        callback: () => { }
+                    { 
+                        type: 'button', 
+                        text: 'Cancel', 
+                        className: 'secondary', 
+                        callback: () => {} 
                     }
                 ]
             ]
         });
     }
-
+    
     handleMoveActiveCell({ direction }) {
         this.focusService.moveActiveCell(direction);
         this.publish();
     }
-
+    
     handleTableCellClick({ rowIndex, column }) {
         const item = this._getItems()[rowIndex];
         if (!item) return;
-
+        
         this.stateService.dispatch(uiActions.clearMultiSelectSelection());
 
         if (column === 'width' || column === 'height') {
@@ -229,19 +228,14 @@ export class QuickQuoteView {
             this.stateService.dispatch(quoteActions.cycleItemType(rowIndex));
             this.stateService.dispatch(uiActions.setSumOutdated(true));
         }
-        // 將 this.publish 改為使用 eventAggregator
-        this.eventAggregator.publish('tableCellClicked', {
-            row: cellData.row,
-            col: cellData.col,
-            value: cellData.value
-        });
+        this.publish();
     }
-
+    
     handleCycleType() {
         const items = this._getItems();
         const eligibleItems = items.filter(item => item.width && item.height);
         if (eligibleItems.length === 0) return;
-
+        
         this.stateService.dispatch(quoteActions.batchUpdateFabricType());
         this.stateService.dispatch(uiActions.setSumOutdated(true));
     }
@@ -262,7 +256,7 @@ export class QuickQuoteView {
 
         layout.push([
             { type: 'text', text: '', colspan: 2 },
-            { type: 'button', text: 'Cancel', className: 'secondary cancel-cell', callback: () => { }, colspan: 1 }
+            { type: 'button', text: 'Cancel', className: 'secondary cancel-cell', callback: () => {}, colspan: 1 }
         ]);
 
         this.eventAggregator.publish(EVENTS.SHOW_CONFIRMATION_DIALOG, {
